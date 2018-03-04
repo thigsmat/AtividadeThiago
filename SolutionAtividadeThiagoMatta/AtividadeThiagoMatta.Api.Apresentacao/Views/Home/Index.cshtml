@@ -1,0 +1,151 @@
+﻿
+@{
+    ViewBag.Title = "Livro";
+}
+
+<h2>Livro</h2>
+
+<form action="/" method="post">
+    <label for="LivroId" class="label">Id</label>
+    <input id="LivroId" name="LivroId" type="text" class="form-control" readonly="readonly" />
+    <label for="Titulo" class="label">Titulo</label>
+    <input id="Titulo" name="Titulo" type="text" class="form-control" />
+    <label for="Resumo" class="label">Resumo</label>
+    <input id="Resumo" name="Resumo" type="text" class="form-control" />
+   
+
+    <br />
+
+</form>
+
+<input value="Gravar" type="submit" class="btn btn-success" />
+
+
+<br />
+<br />
+<br />
+<br />
+
+<table class="table table-responsive">
+    <tbody></tbody>
+
+</table>
+
+
+@section scripts{
+
+    <script>
+
+        $(function () {
+            populaTabela();
+            $('input[type=submit]').click(function (event) {
+                event.preventDefault();
+                enviar();
+            });
+
+        });
+
+        function populaTabela() {
+            $.ajax({
+                url: "/api/livro/listar",
+                type: 'GET',
+                dataType: 'json',
+                data: $('form').serialize(),
+                error: function (x, y, z) {
+                    console.log(x, y, z);
+                },
+                success: function (ret) {
+                    var html = '';
+                    for (var i = 0; i < ret.length; i++) {
+                        html += '<tr><td>' + ret[i].LivroId + '</td>';
+                        html += '<td>' + ret[i].Titulo + '</td>';
+                        html += '<td>' + ret[i].Resumo + '</td>';
+                        html += '<td><a href="#"  data-id="' +
+                            ret[i].LivroId + '" class="btn btn-primary" onClick="editar(event,this)" >Editar</a>';
+                        html += '<a href="#"  data-id="' +
+                            ret[i].LivroId + '" class="btn btn-danger" onClick="excluir(event,this)" >Excluir</a></td></tr>';
+                    }
+
+                    $('table tbody').empty().append(html);
+                }
+            });
+
+        }
+
+        function enviar() {
+            var metodo = 'POST';
+            var url = "/api/livro/novo";
+            var id = $("#LivroId").val();
+
+            if (id != "")
+            {
+                metodo = "PUT";
+                url = "api/livro/alterar/"+id;
+            }
+                
+
+            $.ajax({
+                url: url,
+                type: metodo,
+                dataType: 'json',
+                data: $('form').serialize(),
+                error: function (x, y, z) {
+                    console.log(x, y, z);
+                },
+                success: function (ret) {
+                    populaTabela();
+                    limparCampos();
+                }
+            });
+        }
+
+        function excluir(event, $this) {
+            event.preventDefault();
+            var id = $($this).data('id');
+            if (confirm('Deseja excluir o registro ' + id)) {
+                $.ajax({
+                    url: "/api/livro/excluir/" + id,
+                    type: 'DELETE',
+                    dataType: 'json',
+                    error: function (x, y, z) {
+                        console.log(x, y, z);
+                    },
+                    success: function (ret) {
+                        $($this).parent().parent().remove();
+                    }
+                });
+            }
+        }
+
+        function editar(event, $this) {
+            event.preventDefault();
+            var id = $($this).data('id');
+            $.ajax({
+                url: "/api/livro/pesquisa/" + id,
+                type: 'GET',
+                dataType: 'json',
+                data: $('form').serialize(),
+                error: function (x, y, z) {
+                    console.log(x, y, z);
+                },
+                success: function (ret) {
+                    $('#LivroId').val(ret.LivroId);
+                    $('#Titulo').val(ret.Titulo);
+                    $('#Resumo').val(ret.Resumo);
+                }
+            });
+        }
+
+        function limparCampos() {
+            $('#LivroId').val('');
+            $('#Titulo').val('');
+            $('#Resumo').val('');
+        }
+        
+    </script>
+}
+
+
+
+
+
